@@ -1,5 +1,3 @@
-Aquí tienes el `README.md` completo listo para copiar y pegar en GitHub:
-
 ```markdown
 # Connector Service
 
