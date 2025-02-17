@@ -14,9 +14,32 @@ const supabase = createClient(
 // Configure Telegram API
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_API_URL = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+const TELEGRAM_WEBHOOK_URL = process.env.TELEGRAM_WEBHOOK_URL; // Webhook URL from .env
 
 // BotService URL (configurable from .env)
 const BOT_SERVICE_URL = process.env.BOT_SERVICE_URL || "http://localhost:5000";
+
+// Function to set the webhook with Telegram
+async function setTelegramWebhook() {
+  try {
+    const response = await axios.post(
+      `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook`,
+      {
+        url: TELEGRAM_WEBHOOK_URL, // Use the webhook URL from .env
+      }
+    );
+    if (response.data.ok) {
+      console.log("Webhook set successfully");
+    } else {
+      console.error("Failed to set webhook:", response.data.description);
+    }
+  } catch (error) {
+    console.error("Error setting webhook:", error.message);
+  }
+}
+
+// Call setTelegramWebhook when the service starts
+setTelegramWebhook();
 
 // Function to handle webhook requests
 export default async function handler(req, res) {
@@ -105,8 +128,4 @@ async function sendTelegramMessage(chatId, text) {
     });
   } catch (error) {
     console.error(
-      "Error sending message to Telegram:",
-      error.response?.data || error.message
-    );
-  }
-}
+      "Error sending message to Telegram:
