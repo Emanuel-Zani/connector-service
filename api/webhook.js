@@ -14,7 +14,7 @@ const TELEGRAM_API_URL = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT
 // BotService URL
 const BOT_SERVICE_URL = process.env.BOT_SERVICE_URL || "http://localhost:5000";
 
-export default async function (req, res) {
+export default async function handler(req, res) {
   if (req.method === "POST") {
     try {
       const message = req.body.message;
