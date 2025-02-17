@@ -12,3 +12,4 @@ yarn-error.log*
 
 # Ignore build artifacts
 dist/
+.vercel
