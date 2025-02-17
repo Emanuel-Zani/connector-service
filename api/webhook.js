@@ -1,20 +1,26 @@
+import express from "express";
+import bodyParser from "body-parser";
 import axios from "axios";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 
 dotenv.config();
 
+// Configurar supabase
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_API_KEY
 );
 
 const TELEGRAM_API_URL = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
-
-// BotService URL
 const BOT_SERVICE_URL = process.env.BOT_SERVICE_URL || "http://localhost:5000";
 
-export default async function handler(req, res) {
+// Crear la aplicación Express
+const app = express();
+app.use(bodyParser.json());
+
+// Ruta para manejar los mensajes de Telegram
+app.post("/webhook", async (req, res) => {
   if (req.method === "POST") {
     try {
       const message = req.body.message;
@@ -25,13 +31,13 @@ export default async function handler(req, res) {
       const telegramId = message.from.id;
       const text = message.text;
 
-      // Check if the user is authorized
+      // Verificar si el usuario está autorizado
       const isUserValid = await checkUserInDatabase(telegramId);
       if (!isUserValid) {
         return res.status(403).send("User not authorized");
       }
 
-      // Send the message to BotService for processing
+      // Enviar el mensaje al BotService para su procesamiento
       const response = await axios.post(`${BOT_SERVICE_URL}/process-message`, {
         userId: telegramId,
         telegramId,
@@ -67,9 +73,9 @@ export default async function handler(req, res) {
   } else {
     res.status(405).send("Method Not Allowed");
   }
-}
+});
 
-// Function to check if the user exists in the Supabase database
+// Función para verificar si el usuario existe en la base de datos de Supabase
 async function checkUserInDatabase(telegramId) {
   try {
     const { data, error } = await supabase
@@ -90,7 +96,7 @@ async function checkUserInDatabase(telegramId) {
   }
 }
 
-// Function to send messages to Telegram
+// Función para enviar mensajes a Telegram
 async function sendTelegramMessage(chatId, text) {
   try {
     await axios.post(TELEGRAM_API_URL, {
@@ -104,3 +110,6 @@ async function sendTelegramMessage(chatId, text) {
     );
   }
 }
+
+// Exportar la función para Vercel
+export default app;
