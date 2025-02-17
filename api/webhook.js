@@ -60,10 +60,14 @@ export default async function handler(req, res) {
         "Error processing message:",
         error.response?.data || error.message
       );
-      await sendTelegramMessage(
-        telegramId,
-        "Internal error. Please try again later."
-      );
+
+      if (typeof telegramId !== "undefined") {
+        await sendTelegramMessage(
+          telegramId,
+          "Internal error. Please try again later."
+        );
+      }
+
       res.status(500).send("Internal server error");
     }
   } else {
