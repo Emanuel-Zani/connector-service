@@ -1,47 +1,19 @@
 import axios from "axios";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
-import bodyParser from "body-parser";
 
 dotenv.config();
 
-// Configure Supabase
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_API_KEY
 );
 
-// Configure Telegram API
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const TELEGRAM_API_URL = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-const TELEGRAM_WEBHOOK_URL = process.env.TELEGRAM_WEBHOOK_URL; // Webhook URL from .env
+const TELEGRAM_API_URL = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
 
-// BotService URL (configurable from .env)
+// BotService URL
 const BOT_SERVICE_URL = process.env.BOT_SERVICE_URL || "http://localhost:5000";
 
-// Function to set the webhook with Telegram
-async function setTelegramWebhook() {
-  try {
-    const response = await axios.post(
-      `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook`,
-      {
-        url: TELEGRAM_WEBHOOK_URL, // Use the webhook URL from .env
-      }
-    );
-    if (response.data.ok) {
-      console.log("Webhook set successfully");
-    } else {
-      console.error("Failed to set webhook:", response.data.description);
-    }
-  } catch (error) {
-    console.error("Error setting webhook:", error.message);
-  }
-}
-
-// Call setTelegramWebhook when the service starts
-setTelegramWebhook();
-
-// Function to handle webhook requests
 export default async function handler(req, res) {
   if (req.method === "POST") {
     try {
@@ -61,14 +33,13 @@ export default async function handler(req, res) {
 
       // Send the message to BotService for processing
       const response = await axios.post(`${BOT_SERVICE_URL}/process-message`, {
-        userId: telegramId, // Using telegramId as userId
+        userId: telegramId,
         telegramId,
         text,
       });
 
-      // If processing was successful, get the response and send it to Telegram
       if (response.data.status === "success") {
-        const confirmationMessage = response.data.message; // "[Category] expense added ✅"
+        const confirmationMessage = response.data.message;
         await sendTelegramMessage(telegramId, confirmationMessage);
       } else {
         await sendTelegramMessage(
@@ -112,7 +83,7 @@ async function checkUserInDatabase(telegramId) {
       return false;
     }
 
-    return data !== null; // Returns true if the user exists
+    return data !== null;
   } catch (error) {
     console.error("Database error:", error.message);
     return false;
@@ -128,4 +99,8 @@ async function sendTelegramMessage(chatId, text) {
     });
   } catch (error) {
     console.error(
-      "Error sending message to Telegram:
+      "Error sending message to Telegram:",
+      error.response?.data || error.message
+    );
+  }
+}
