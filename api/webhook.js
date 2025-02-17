@@ -14,7 +14,12 @@ const TELEGRAM_API_URL = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT
 // BotService URL
 const BOT_SERVICE_URL = process.env.BOT_SERVICE_URL || "http://localhost:5000";
 
-export default async function handler(req, res) {
+// Define the runtime for Vercel (important for proper function behavior)
+export const config = {
+  runtime: "nodejs", // Makes sure the function runs in a Node.js environment
+};
+
+export default async function (req, res) {
   if (req.method === "POST") {
     try {
       const message = req.body.message;
