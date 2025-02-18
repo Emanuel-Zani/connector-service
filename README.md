@@ -6,8 +6,6 @@ The **Connector Service** is an application developed in Node.js that acts as an
 
 The Telegram bot facilitates the addition of expenses into a database. Users send short messages (e.g., "Pizza 20 bucks"), and the bot handles the rest. The system is divided into two services:
 
-> > > > > > > 15c2ddf296b221eb306541d2e3cb8b24bd1aee48
-
 - **BotService**: Developed in Python, this service analyzes incoming messages to identify and extract expense details before persisting these details into the database.
 - **Connector Service**: Built using Node.js, this service manages the reception of messages from users, forwards these messages to the Bot Service for processing, and sends appropriate responses back to the users via Telegram.
 
