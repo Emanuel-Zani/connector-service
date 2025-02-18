@@ -1,125 +1,114 @@
-# Connector Service
 
-This is the **Connector Service** that acts as an intermediary between the **Telegram Bot** and the **BotService**. It processes incoming messages from Telegram, validates users, and forwards the data to the **BotService** for further processing.
+# Connector Service - Webhook
 
-### Features:
-- Receives messages from Telegram via a webhook.
-- Checks if the user is authorized by verifying their `telegram_id` in the Supabase database.
-- Forwards valid messages to the **BotService** for processing.
-- Sends a confirmation message back to Telegram once the message is processed successfully.
+The **Connector Service** is an application developed in Node.js that acts as an intermediary between the Telegram API and the Bot Service. This service is responsible for receiving messages from Telegram users, validating users, and sending the messages to the Bot Service for processing.
 
----
+## Summary
 
-## Setup Instructions
+The Telegram bot facilitates the addition of expenses into a database. Users send short messages (e.g., "Pizza 20 bucks"), and the bot handles the rest. The system is divided into two services:
+
+- **BotService**: Developed in Python, this service analyzes incoming messages to identify and extract expense details before persisting these details into the database.
+- **Connector Service**: Built using Node.js, this service manages the reception of messages from users, forwards these messages to the Bot Service for processing, and sends appropriate responses back to the users via Telegram.
+
+## Requirements
+
+- The bot must recognize a whitelist of Telegram users sourced from the database. Any user not listed should be ignored.
+- The bot must verify the content of received messages to distinguish expense-related inputs from non-expense texts.
+- Expenses should be automatically categorized into predefined categories: Housing, Transportation, Food, Utilities, Insurance, Medical/Healthcare, Savings, Debt, Education, Entertainment, and Other.
+- The bot should reply with "[Category] expense added ✅" upon successful addition of an expense.
+- Setting up a new bot should not require any code changes.
+
+## Installation
 
 ### Prerequisites
 
-Before you begin, ensure you have the following installed:
+Make sure you have the following installed on your system:
 
-1. **Node.js** (version 16 or higher): [Download Node.js](https://nodejs.org/)
-2. **Vercel CLI**: Install the Vercel CLI globally by running:
+- Node.js (LTS)
+- npm (Node Package Manager)
+- Access to a PostgreSQL database server (Supabase is recommended)
+
+### Installation Steps
+
+1. **Clone the repository**
+
    ```bash
-   npm install -g vercel
-3. **Supabase Account**: Create a Supabase project to store user data. [Create a Supabase account](https://supabase.io/).
-
-4. **Telegram Bot Token**: Create a bot on Telegram and obtain your bot token. [Create a Telegram bot](https://core.telegram.org/bots#3-how-do-i-create-a-bot).
-
----
-
-### Configuration
-
-1. **Create a `.env` file** in the root of the project and add the following environment variables:
-
-   ```
-   SUPABASE_URL=<your_supabase_url>
-   SUPABASE_API_KEY=<your_supabase_api_key>
-   TELEGRAM_BOT_TOKEN=<your_telegram_bot_token>
-   BOT_SERVICE_URL=<your_bot_service_url>  # URL of the BotService (default: http://localhost:5000)
+   git clone <REPOSITORY_URL>
+   cd <REPOSITORY_NAME>
    ```
 
-   Replace the placeholders with your actual values.
+2. **Install dependencies**
 
-2. **Vercel Deployment**: This service is designed to run as a serverless function on Vercel. You can deploy it directly from the command line.
+   Run the following command to install the necessary dependencies:
 
----
-
-## Steps for Deployment on Vercel
-
-1. **Log in to Vercel**:
-
-   If you haven't logged in yet, run:
    ```bash
-   vercel login
+   npm install
    ```
 
-2. **Deploy the Service**:
+3. **Configure environment variables**
 
-   In the root directory of the project, run:
+   Create a `.env` file in the root of the project and add the following variables:
+
+   ```plaintext
+   SUPABASE_URL=<YOUR_SUPABASE_URL>
+   SUPABASE_API_KEY=<YOUR_SUPABASE_API_KEY>
+   TELEGRAM_BOT_TOKEN=<YOUR_TELEGRAM_BOT_TOKEN>
+   BOT_SERVICE_URL=<BOT_SERVICE_URL>
+   PORT=3000
+   ```
+
+4. **Start the server**
+
+   Run the following command to start the server:
+
    ```bash
-   vercel
+   npm start
    ```
 
-   Follow the prompts to select your project name and confirm the settings.
-
-3. **Set up Environment Variables**:
-
-   - Go to the [Vercel dashboard](https://vercel.com).
-   - Select your project.
-   - Under **Settings**, go to **Environment Variables**.
-   - Add the same environment variables you defined in the `.env` file.
-
-4. **Webhook Configuration**:
-
-   - After deployment, Vercel will provide a URL (e.g., `https://your-project-name.vercel.app`).
-   - Set the webhook for your Telegram bot to this URL, appending `/api/webhook` (e.g., `https://your-project-name.vercel.app/api/webhook`).
-
----
-
-## Dependencies
-
-This project uses the following dependencies:
-
-- `@supabase/supabase-js`: Supabase client for interacting with the Supabase database.
-- `axios`: HTTP client for making requests to external services (e.g., Telegram API, BotService).
-- `body-parser`: Middleware for parsing incoming request bodies.
-- `dotenv`: Loads environment variables from the `.env` file.
-- `express`: Web framework for handling HTTP requests (used in local development, but Vercel uses serverless functions).
-
-To install the dependencies, run:
-```bash
-npm install
-```
-
----
-
-## Directory Structure
-
-```
-/connector-service
-├── .env             # Environment variables (should not be pushed to GitHub)
-├── api
-│   └── webhook.js   # The serverless function that processes incoming webhook requests from Telegram
-├── package.json     # Project metadata and dependencies
-└── README.md        # This file
-```
-
----
+   The service will be available at `http://localhost:3000`.
 
 ## Usage
 
-After deploying, Vercel will provide a live URL for your service. You can use this URL for the webhook configuration in Telegram and verify that everything is working.
+- To receive messages, set up a webhook in Telegram using your server's URL and the `/webhook` endpoint.
+- Ensure that users are on the whitelist in the database to interact with the bot.
 
----
+## Database Structure
 
-## Troubleshooting
+Below are the definitions for the necessary tables in the database:
 
-- **Error: `Method Not Allowed`**: This error occurs when a non-POST request is made to the webhook. Ensure your webhook is using a POST method.
-- **Error: `Internal server error`**: This can happen if there is an issue with the environment variables or the communication with Supabase or BotService. Check your logs in the Vercel dashboard for more details.
-- **Unauthorized User**: If a user is not found in the Supabase database, they will receive a "User not authorized" message.
+### `users` Table
 
----
+```sql
+CREATE TABLE users (
+  "id" SERIAL PRIMARY KEY,
+  "telegram_id" text UNIQUE NOT NULL
+);
+```
+
+### `expenses` Table
+
+```sql
+CREATE TABLE expenses (
+  "id" SERIAL PRIMARY KEY,
+  "user_id" integer NOT NULL REFERENCES users("id"),
+  "description" text NOT NULL,
+  "amount" money NOT NULL,
+  "category" text NOT NULL,
+  "added_at" timestamp NOT NULL
+);
+```
+
+## Submission
+
+- The complete code must be hosted in a publicly accessible GitHub repository.
+- It is recommended to deploy the services to Vercel, Railway, or any similar PaaS for easier testing.
+- Supabase is a good option for PostgreSQL hosting with a free tier.
+
+## Contributions
+
+If you would like to contribute to this project, feel free to fork the repository and submit a pull request.
 
 ## License
-This project is licensed under the MIT License - see the LICENSE file for details.
 
-
+This project is licensed under the MIT License. See the LICENSE file for more details.
+```
