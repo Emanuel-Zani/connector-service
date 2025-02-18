@@ -1,26 +1,27 @@
 # Connector Service
 
-The Connector Service is a Node.js application that acts as the interface between the Telegram API and the Bot Service. It processes incoming messages from Telegram, verifies users against a database, and forwards valid messages to the Bot Service for processing.
+The Connector Service is a Node.js application that acts as the interface between the Telegram API and the Bot Service. It processes incoming messages from Telegram, verifies users against a database, and forwards valid messages to the Bot Service for processing. This service is a crucial component of a larger system designed to streamline expense tracking via a chatbot.
 
 ## Summary
 
 This service is part of a larger system that consists of two services:
-1. **Bot Service**: Developed in Python, this service analyzes incoming messages to extract expense details and stores them in a PostgreSQL database.
-2. **Connector Service** (this service): Built using Node.js, it manages communication with Telegram and forwards user messages to the Bot Service.
+
+- **Bot Service:** Developed in Python, this service analyzes incoming messages to extract expense details and stores them in a PostgreSQL database.
+- **Connector Service (this service):** Built using Node.js, it manages communication with Telegram and forwards user messages to the Bot Service.
 
 ## Features
 
-- The service verifies if a user is in a whitelist sourced from the database.
-- It handles incoming Telegram messages and processes them.
-- It sends responses back to the user via Telegram, confirming whether their expense has been added.
+- Verifies if a user is in a whitelist sourced from the database.
+- Handles incoming Telegram messages and processes them.
+- Sends responses back to the user via Telegram, confirming whether their expense has been added.
 
 ## Requirements
 
 - **Node.js LTS**
-- **Express**: A web framework for Node.js.
-- **Axios**: For making HTTP requests.
-- **Supabase**: For database operations.
-- **dotenv**: For loading environment variables.
+- **Express:** A web framework for Node.js.
+- **Axios:** For making HTTP requests.
+- **Supabase:** For database operations.
+- **dotenv:** For loading environment variables.
 
 ## Setup Instructions
 
@@ -30,14 +31,12 @@ This service is part of a larger system that consists of two services:
    cd connector-service
    ```
 
-2. **Install dependencies:**
-   Ensure you have Node.js installed, then run:
+2. **Install dependencies:** Ensure you have Node.js installed, then run:
    ```bash
    npm install express body-parser axios @supabase/supabase-js dotenv
    ```
 
-3. **Environment Variables:**
-   Create a `.env` file in the root directory of your project and add the following environment variables:
+3. **Environment Variables:** Create a `.env` file in the root directory of your project and add the following environment variables:
    ```plaintext
    SUPABASE_URL=<your_supabase_url>
    SUPABASE_API_KEY=<your_supabase_api_key>
@@ -45,20 +44,18 @@ This service is part of a larger system that consists of two services:
    BOT_SERVICE_URL=<your_bot_service_url>  # Optional, defaults to "http://localhost:5000"
    ```
 
-4. **Run the Connector Service:**
-   You can start the service by running:
+4. **Run the Connector Service:** Start the service by running:
    ```bash
    node webhook.js
    ```
-
    The service will run on `http://localhost:3000`.
 
 ## How It Works
 
-- The service listens for incoming messages on the `/webhook` endpoint.
-- Upon receiving a message, it verifies the user's Telegram ID against the database.
-- If the user is valid, the service forwards the message to the Bot Service for processing.
-- Responses from the Bot Service are sent back to the user via Telegram.
+1. The service listens for incoming messages on the `/webhook` endpoint.
+2. Upon receiving a message, it verifies the user's Telegram ID against the database.
+3. If the user is valid, the service forwards the message to the Bot Service for processing.
+4. Responses from the Bot Service are sent back to the user via Telegram.
 
 ## Database Schema
 
@@ -85,6 +82,11 @@ CREATE TABLE expenses (
 ## Error Handling
 
 The service includes error handling for various scenarios:
-- If a message does not have the required fields, it returns a `400` status with an error message.
-- If a user is not authorized, it returns a `403` status.
-- If there are internal server errors, it returns a `500` status.
+
+- If a message does not have the required fields, it returns a 400 status with an error message.
+- If a user is not authorized, it returns a 403 status.
+- If there are internal server errors, it returns a 500 status.
+
+## Testing the Service
+
+To test the service, you can send a message via Telegram to your bot. Ensure that your bot is properly configured and that you are using a whitelisted Telegram ID. Check the responses to verify that expenses are being processed correctly.
