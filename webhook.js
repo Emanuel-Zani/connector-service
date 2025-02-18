@@ -4,10 +4,10 @@ import axios from "axios";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 
-// Cargar variables de entorno
+// Load environment variables
 dotenv.config();
 
-// Configurar Supabase
+// Configure Supabase
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_API_KEY
@@ -16,16 +16,16 @@ const supabase = createClient(
 const TELEGRAM_API_URL = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
 const BOT_SERVICE_URL = process.env.BOT_SERVICE_URL || "http://localhost:5000";
 
-// Crear la aplicación Express
+// Create the Express application
 const app = express();
 app.use(bodyParser.json());
 
-// Ruta raíz
+// Root route
 app.get("/", (req, res) => {
   res.send("Welcome to the Connector Service!");
 });
 
-// Webhook de Telegram
+// Telegram webhook
 app.post("/webhook", async (req, res) => {
   try {
     const message = req.body.message;
@@ -36,7 +36,7 @@ app.post("/webhook", async (req, res) => {
     const telegramId = message.from.id;
     const text = message.text;
 
-    // Verificar si el usuario está en la base de datos
+    // Check if the user is in the database
     const isUserValid = await checkUserInDatabase(telegramId);
     if (!isUserValid) {
       console.warn(`Access denied for user ${telegramId}`);
@@ -47,9 +47,9 @@ app.post("/webhook", async (req, res) => {
       return res.status(403).json({ error: "User not authorized" });
     }
 
-    // Enviar mensaje al BotService
+    // Send message to the BotService
     const response = await axios.post(`${BOT_SERVICE_URL}/process-message`, {
-      userId: telegramId, // Se elimina telegramId redundante
+      userId: telegramId, // Removed redundant telegramId
       text,
     });
 
@@ -73,12 +73,12 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
-// Verificar si el usuario está en la base de datos
+// Check if the user is in the database
 async function checkUserInDatabase(telegramId) {
   try {
     const { data, error } = await supabase
       .from("users")
-      .select("id") // Solo seleccionamos ID para optimizar la consulta
+      .select("id") // Only selecting ID to optimize the query
       .eq("telegram_id", telegramId)
       .single();
 
@@ -98,7 +98,7 @@ async function checkUserInDatabase(telegramId) {
   }
 }
 
-// Enviar mensajes a Telegram
+// Send messages to Telegram
 async function sendTelegramMessage(chatId, text) {
   try {
     await axios.post(TELEGRAM_API_URL, { chat_id: chatId, text: text });
@@ -110,7 +110,7 @@ async function sendTelegramMessage(chatId, text) {
   }
 }
 
-// Iniciar servidor
+// Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
