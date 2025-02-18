@@ -1,82 +1,68 @@
-# Connector Service - Webhook
+# Connector Service
 
-The **Connector Service** is an application developed in Node.js that acts as an intermediary between the Telegram API and the Bot Service. This service is responsible for receiving messages from Telegram users, validating users, and sending the messages to the Bot Service for processing.
+The Connector Service is a Node.js application that acts as the interface between the Telegram API and the Bot Service. It processes incoming messages from Telegram, verifies users against a database, and forwards valid messages to the Bot Service for processing.
 
 ## Summary
 
-The Telegram bot facilitates the addition of expenses into a database. Users send short messages (e.g., "Pizza 20 bucks"), and the bot handles the rest. The system is divided into two services:
+This service is part of a larger system that consists of two services:
+1. **Bot Service**: Developed in Python, this service analyzes incoming messages to extract expense details and stores them in a PostgreSQL database.
+2. **Connector Service** (this service): Built using Node.js, it manages communication with Telegram and forwards user messages to the Bot Service.
 
-- **BotService**: Developed in Python, this service analyzes incoming messages to identify and extract expense details before persisting these details into the database.
-- **Connector Service**: Built using Node.js, this service manages the reception of messages from users, forwards these messages to the Bot Service for processing, and sends appropriate responses back to the users via Telegram.
+## Features
+
+- The service verifies if a user is in a whitelist sourced from the database.
+- It handles incoming Telegram messages and processes them.
+- It sends responses back to the user via Telegram, confirming whether their expense has been added.
 
 ## Requirements
 
-- The bot must recognize a whitelist of Telegram users sourced from the database. Any user not listed should be ignored.
-- The bot must verify the content of received messages to distinguish expense-related inputs from non-expense texts.
-- Expenses should be automatically categorized into predefined categories: Housing, Transportation, Food, Utilities, Insurance, Medical/Healthcare, Savings, Debt, Education, Entertainment, and Other.
-- The bot should reply with "[Category] expense added ✅" upon successful addition of an expense.
-- Setting up a new bot should not require any code changes.
+- **Node.js LTS**
+- **Express**: A web framework for Node.js.
+- **Axios**: For making HTTP requests.
+- **Supabase**: For database operations.
+- **dotenv**: For loading environment variables.
 
-## Installation
+## Setup Instructions
 
-### Prerequisites
-
-Make sure you have the following installed on your system:
-
-- Node.js (LTS)
-- npm (Node Package Manager)
-- Access to a PostgreSQL database server (Supabase is recommended)
-
-### Installation Steps
-
-1. **Clone the repository**
-
+1. **Clone the repository:**
    ```bash
-   git clone <REPOSITORY_URL>
-   cd <REPOSITORY_NAME>
+   git clone https://github.com/Emanuel-Zani/connector-service.git
+   cd connector-service
    ```
 
-2. **Install dependencies**
-
-   Run the following command to install the necessary dependencies:
-
+2. **Install dependencies:**
+   Ensure you have Node.js installed, then run:
    ```bash
-   npm install
+   npm install express body-parser axios @supabase/supabase-js dotenv
    ```
 
-3. **Configure environment variables**
-
-   Create a `.env` file in the root of the project and add the following variables:
-
+3. **Environment Variables:**
+   Create a `.env` file in the root directory of your project and add the following environment variables:
    ```plaintext
-   SUPABASE_URL=<YOUR_SUPABASE_URL>
-   SUPABASE_API_KEY=<YOUR_SUPABASE_API_KEY>
-   TELEGRAM_BOT_TOKEN=<YOUR_TELEGRAM_BOT_TOKEN>
-   BOT_SERVICE_URL=<BOT_SERVICE_URL>
-   PORT=3000
+   SUPABASE_URL=<your_supabase_url>
+   SUPABASE_API_KEY=<your_supabase_api_key>
+   TELEGRAM_BOT_TOKEN=<your_telegram_bot_token>
+   BOT_SERVICE_URL=<your_bot_service_url>  # Optional, defaults to "http://localhost:5000"
    ```
 
-4. **Start the server**
-
-   Run the following command to start the server:
-
+4. **Run the Connector Service:**
+   You can start the service by running:
    ```bash
-   npm start
+   node webhook.js
    ```
 
-   The service will be available at `http://localhost:3000`.
+   The service will run on `http://localhost:3000`.
 
-## Usage
+## How It Works
 
-- To receive messages, set up a webhook in Telegram using your server's URL and the `/webhook` endpoint.
-- Ensure that users are on the whitelist in the database to interact with the bot.
+- The service listens for incoming messages on the `/webhook` endpoint.
+- Upon receiving a message, it verifies the user's Telegram ID against the database.
+- If the user is valid, the service forwards the message to the Bot Service for processing.
+- Responses from the Bot Service are sent back to the user via Telegram.
 
-## Database Structure
+## Database Schema
 
-Below are the definitions for the necessary tables in the database:
-
-### `users` Table
-
+### Users Table
 ```sql
 CREATE TABLE users (
   "id" SERIAL PRIMARY KEY,
@@ -84,8 +70,7 @@ CREATE TABLE users (
 );
 ```
 
-### `expenses` Table
-
+### Expenses Table
 ```sql
 CREATE TABLE expenses (
   "id" SERIAL PRIMARY KEY,
@@ -97,8 +82,9 @@ CREATE TABLE expenses (
 );
 ```
 
-## Submission
+## Error Handling
 
-- The complete code must be hosted in a publicly accessible GitHub repository.
-- It is recommended to deploy the services to Vercel, Railway, or any similar PaaS for easier testing.
-- Supabase is a good option for PostgreSQL hosting with a free tier.
+The service includes error handling for various scenarios:
+- If a message does not have the required fields, it returns a `400` status with an error message.
+- If a user is not authorized, it returns a `403` status.
+- If there are internal server errors, it returns a `500` status.
