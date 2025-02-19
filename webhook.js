@@ -49,7 +49,7 @@ app.post("/webhook", async (req, res) => {
 
     // Send message to the BotService
     const response = await axios.post(`${BOT_SERVICE_URL}/process-message`, {
-      userId: telegramId, // Removed redundant telegramId
+      userId: telegramId,
       text,
     });
 
@@ -78,7 +78,7 @@ async function checkUserInDatabase(telegramId) {
   try {
     const { data, error } = await supabase
       .from("users")
-      .select("id") // Only selecting ID to optimize the query
+      .select("id") 
       .eq("telegram_id", telegramId)
       .single();
 
